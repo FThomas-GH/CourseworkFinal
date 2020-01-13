@@ -53,6 +53,26 @@ statesWGS84
 tmap_mode("view")
 qtm(statesWGS84)
 
+#join Trump votes and states on the states names columns 
+colnames(statesWGS84)
+colnames(trumpvotes)
+
+trumpmap2016 <- merge(statesWGS84, 
+                      trumpvotes, 
+                      by.x="STATE_NAME",
+                      by.y="state", 
+                      no.dups= TRUE)
+
+#check all working and plotting correctly 
+nrow(trumpmap2016)
+class(trumpmap2016)
+
+tmap_mode("view")
+tm_shape(trumpmap2016) +
+  tm_polygons("percenttrump",
+              style="cont",
+              midpoint=NA,
+              title="% vote for trump")
 
 
 
