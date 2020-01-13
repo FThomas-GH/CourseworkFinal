@@ -1,18 +1,11 @@
 ---
-title: "CourseworkFinalRMarkdown"
+title: "GIS Coursework - Spatially analysing the Trump effect"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
 
 ## Analysing Hate Crime following the Trump election
 
@@ -24,6 +17,8 @@ library(tmap)
 library(readxl)
 library(plyr)
 library(spdep)
+library(RColorBrewer)
+
 
 
 ```
@@ -231,11 +226,6 @@ trumpmap2016andCrime_noAorH <- trumpmap2016andCrime_noAorH %>% dplyr::rename_all
 
 ```
 
-```{r}
-
-trumpmap2016andCrime_noA$STATE_NAME
-
-```
 
 Next you need to standardise the incidents of hate crime across the states. This was done by calculating the number of incidents per 100,000 people in each state. 
 
