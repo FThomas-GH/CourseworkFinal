@@ -253,6 +253,45 @@ trumpmap2016andCrime_noA$STATE_NAME
 
 ```
 
+Next you need to standardise the incidents of hate crime across the states. This was done by calculating the number of incidents per 100,000 people in each state. 
+
+```{r}
+#values for 2014
+
+trumpmap2016andCrime_noAorH$incident2014per100k <- trumpmap2016andCrime_noAorH$Total.number.of.incidents.reported_2014/trumpmap2016andCrime_noAorH$Population.covered_2014*100000
+
+trumpmap2016andCrime_noAorH$incident2014per100k
+
+
+#values for 2015
+
+trumpmap2016andCrime_noAorH$incident2015per100k <- trumpmap2016andCrime_noAorH$Total.number.of.incidents.reported_2015/trumpmap2016andCrime_noAorH$Population.covered_2015*100000
+
+trumpmap2016andCrime_noAorH$incident2015per100k
+
+
+#values for 2016
+
+trumpmap2016andCrime_noAorH$incident2016per100k <- trumpmap2016andCrime_noAorH$Total.number.of.incidents.reported_2016/trumpmap2016andCrime_noAorH$Population.covered_2016*100000
+
+trumpmap2016andCrime_noAorH$incident2016per100k
+
+
+#values for 2017
+
+trumpmap2016andCrime_noAorH$incident2017per100k <- trumpmap2016andCrime_noAorH$Total.number.of.incidents.reported_2017/trumpmap2016andCrime_noAorH$Population.covered_2017*100000
+
+trumpmap2016andCrime_noAorH$incident2017per100k
+
+
+#values for 2018
+trumpmap2016andCrime_noAorH$incident2018per100k <- trumpmap2016andCrime_noAorH$Total.number.of.incidents.reported_2018/trumpmap2016andCrime_noAorH$Population.covered_2018*100000
+
+trumpmap2016andCrime_noAorH$incident2018per100k
+
+```
+
+
 
 Next you need to get the coordinate centre points of all U.S. states. This involved converted to Sp object first and then calculating coordinates
 
@@ -316,14 +355,142 @@ States_no_na.lw <- nb2listw(States_noNA_nb, style="C")
 ```
 
 
+Mapping the percentage of Trump votes. 
+
+```{r warning=FALSE}
+#interactive map
+tmap_mode("view")
+tm_shape(trumpmap2016andCrime_noAorH) +
+  tm_polygons("percenttrump",
+              alpha = 1,
+              palette = "Reds",
+              style="cont",
+              title="Percentage of Trump Votes 2016")+
+  tm_layout(
+    legend.title.size = 0.1,
+    legend.text.size = 0.8
+  )
+
+#MAP ELECTION TRUMP VOTE %
+tmap_mode("plot")
+electiontrumpvote <- tm_shape(trumpmap2016andCrime_noAorH) +
+                    tm_polygons("percenttrump",
+              palette = "Reds",
+              style="cont",
+              title="Trump Votes % 2016")+
+  tm_layout(
+    panel.show = TRUE,
+    panel.labels = "Percentage of votes for Trump in the 2016 election",
+    legend.title.size = 1,
+    legend.text.size = 0.8,
+    legend.height = 2)
+tmap_save(tm=electiontrumpvote, filename = "electiontrumpvotemap.png")
+
+
+
+```
 
 
 
 
+Mapping all 5 years of crime stats and exporting to picture. 
 
 
 
+```{r warning=FALSE}
+tmap_mode("plot")
+breaks2 <- c(0,1,2,4,10,20,30,40)
 
+
+hatecrimeincident2014 <-tm_shape(trumpmap2016andCrime_noAorH) +
+  tm_polygons("incident2014per100k",
+              palette = "PuBuGn",
+              style="fixed",
+              breaks=breaks2,
+              title="Hate crime incidents per 100,000")+
+  tm_layout(
+    panel.show = TRUE,
+    panel.labels = "Hate crime incidents per 100,000 for 2014",
+    legend.show = FALSE,
+    legend.title.size = 0.7,
+    legend.text.size = 0.7,
+    legend.height = 2)
+
+tmap_save(tm=hatecrimeincident2014, filename = "hatecrimeincident2014.png")
+
+hatecrimeincident2015 <- tm_shape(trumpmap2016andCrime_noAorH) +
+  tm_polygons("incident2015per100k",
+              palette = "PuBuGn",
+              style="fixed",
+              breaks=breaks2,
+              title="Hate crime incidents per 100,000")+
+  tm_layout(
+    panel.show = TRUE,
+    panel.labels = "Hate crime incidents per 100,000 for 2015",
+    legend.show = FALSE,
+    legend.title.size = 0.7,
+    legend.text.size = 0.7,
+    legend.height = 2)
+
+tmap_save(tm=hatecrimeincident2015, filename = "hatecrimeincident2015.png")
+
+
+
+hatecrimeincident2016 <- tm_shape(trumpmap2016andCrime_noAorH) +
+  tm_polygons("incident2016per100k",
+              palette = "PuBuGn",
+              style="fixed",
+              breaks=breaks2,
+              title="Hate crime incidents per 100,000")+
+  tm_layout(
+    panel.show = TRUE,
+    panel.labels = "Hate crime incidents per 100,000 for 2016",
+    legend.show = FALSE,
+    legend.title.size = 0.7,
+    legend.text.size = 0.7,
+    legend.height = 2)
+
+tmap_save(tm=hatecrimeincident2016, filename = "hatecrimeincident2016.png")
+
+
+hatecrimeincident2017 <- tm_shape(trumpmap2016andCrime_noAorH) +
+  tm_polygons("incident2017per100k",
+              palette = "PuBuGn",
+              style="fixed",
+              breaks=breaks2,
+              title="Hate crime incidents per 100,000")+
+  tm_layout(
+    panel.show = TRUE,
+    panel.labels = "Hate crime incidents per 100,000 for 2017",
+    legend.show = FALSE,
+    legend.title.size = 0.7,
+    legend.text.size = 0.7,
+    legend.height = 2)
+
+tmap_save(tm=hatecrimeincident2017, filename = "hatecrimeincident2017.png")
+
+
+hatecrimeincident2018 <- tm_shape(trumpmap2016andCrime_noAorH) +
+  tm_polygons("incident2018per100k",
+              palette = "PuBuGn",
+              style="fixed",
+              breaks=breaks2,
+              title="Hate crime incidents per 100,000")+
+  tm_layout(
+    panel.show = TRUE,
+    panel.labels = "Hate crime incidents per 100,000 for 2018",
+    legend.outside = TRUE,
+    legend.text.size = 1,
+    legend.height = 80)
+
+tmap_save(tm=hatecrimeincident2018, filename = "hatecrimeincident2018.png")
+
+
+
+```
+
+
+## Moran's I
 
 
 
