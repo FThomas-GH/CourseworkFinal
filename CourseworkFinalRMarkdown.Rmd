@@ -232,7 +232,6 @@ trumpmap2016andCrime_noAorH <- trumpmap2016andCrime_noAorH %>% dplyr::rename_all
 ```
 
 ```{r}
-colnames(trumpmap2016andCrime_noAorH)
 
 trumpmap2016andCrime_noA$STATE_NAME
 
