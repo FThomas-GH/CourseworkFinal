@@ -247,7 +247,6 @@ trumpmap2016andCrime_noAorH$incident2014per100k <- trumpmap2016andCrime_noAorH$T
 
 trumpmap2016andCrime_noAorH$incident2014per100k
 
-
 #values for 2015
 
 trumpmap2016andCrime_noAorH$incident2015per100k <- trumpmap2016andCrime_noAorH$Total.number.of.incidents.reported_2015/trumpmap2016andCrime_noAorH$Population.covered_2015*100000
