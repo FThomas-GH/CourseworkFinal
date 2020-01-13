@@ -36,6 +36,9 @@ Note that the `echo = FALSE` parameter was added to the code chunk to prevent pr
 library(sf)
 library(dplyr)
 library(tmap)
+library(readxl)
+library(plyr)
+library(spdep)
 
 
 ```
@@ -93,7 +96,224 @@ class(trumpvotes)
 ```
 
 
+Read in the shapefile for the U.S AND check projection
 
+```{r}
+States <- st_read("states_21basic/states.shp")
+States
+
+```
+
+Current projection is one that I do not know, so project into WGS84 (preferred CRS) 
+
+```{r}
+statesWGS84 <- st_transform(States, 4326)
+
+statesWGS84
+```
+
+
+Check it's all working with a quick map. 
+```{r}
+tmap_mode("view")
+qtm(statesWGS84)
+```
+
+Join the voting results to the states shapefile
+
+```{r}
+colnames(statesWGS84)
+colnames(trumpvotes)
+
+trumpmap2016 <- merge(statesWGS84, 
+                      trumpvotes, 
+                      by.x="STATE_NAME",
+                      by.y="state", 
+                      no.dups= TRUE)
+
+```
+
+Check that it is all working through a quick map
+
+
+```{r}
+nrow(trumpmap2016)
+class(trumpmap2016)
+
+tmap_mode("view")
+tm_shape(trumpmap2016) +
+  tm_polygons("percenttrump",
+              style="cont",
+              midpoint=NA,
+              title="% vote for trump")
+```
+
+
+Add in the hate crime statistics and check
+
+```{r}
+
+hatecrime2014 <- read_excel("table_12-hatecrime2014.xls", skip=2)
+hatecrime2015 <- read_excel("table_12-hatecrime2015.xls", skip=2)
+hatecrime2016 <- read_excel("table_12-hatecrime2016.xls", skip=2)
+hatecrime2017 <- read_excel("table_12-hatecrime2017.xls", skip=2)
+hatecrime2018 <- read_excel("table_12-hatecrime2018.xls", skip=2)
+
+colnames(hatecrime2014)
+class(hatecrime2014)
+
+```
+
+Add the year to the end of each column name in each data set so that when they become joined, you can clearly keep track of which figures are for which year. 
+
+```{r}
+
+colnames(hatecrime2014) <- paste(colnames(hatecrime2014), "2014", sep = "_")
+colnames(hatecrime2015) <- paste(colnames(hatecrime2015), "2015", sep = "_")
+colnames(hatecrime2016) <- paste(colnames(hatecrime2016), "2016", sep = "_")
+colnames(hatecrime2017) <- paste(colnames(hatecrime2017), "2017", sep = "_")
+colnames(hatecrime2018) <- paste(colnames(hatecrime2018), "2018", sep = "_")
+
+
+```
+
+
+Rename the first column in each to enable joins. Check results
+
+
+```{r}
+names(hatecrime2014)[1] <- c("State")
+names(hatecrime2015)[1] <- c("State")
+names(hatecrime2016)[1] <- c("State")
+names(hatecrime2017)[1] <- c("State")
+names(hatecrime2018)[1] <- c("State")
+
+colnames(hatecrime2014)
+
+```
+
+
+Join all hate crime statistics together
+
+```{r}
+
+hatecrime <- join_all(list(hatecrime2014,hatecrime2015,hatecrime2016,hatecrime2017,hatecrime2018), 
+                      by='State', type='left')
+
+class(hatecrime)
+head(hatecrime)
+
+```
+
+Join hate crime to the Trump vote map and check it 
+
+```{r}
+trumpmap2016andCrime <- merge(trumpmap2016, 
+                         hatecrime, 
+                         by.x="STATE_NAME",
+                         by.y="State", 
+                         no.dups= TRUE)
+
+colnames(trumpmap2016andCrime)
+
+```
+
+
+Quick map check to see that it's all working
+
+```{r}
+tmap_mode("view")
+
+tm_shape(trumpmap2016andCrime) + 
+  tm_polygons("Total\nnumber of\nincidents\nreported_2014") 
+
+```
+
+
+
+## Spatial Analysis
+
+Remove Alaska and Hawaii. As well as rename the columns to make them easier to work with (no spaces)
+
+```{r}
+
+trumpmap2016andCrime_noH<- subset(trumpmap2016andCrime, STATE_NAME!="Hawaii")
+trumpmap2016andCrime_noAorH <- subset(trumpmap2016andCrime_noH, STATE_NAME!="Alaska")
+
+trumpmap2016andCrime_noAorH <- trumpmap2016andCrime_noAorH %>% dplyr::rename_all(list(~make.names(.)))
+
+
+
+```
+
+```{r}
+colnames(trumpmap2016andCrime_noAorH)
+
+trumpmap2016andCrime_noA$STATE_NAME
+
+```
+
+
+Next you need to get the coordinate centre points of all U.S. states. This involved converted to Sp object first and then calculating coordinates
+
+```{r}
+
+SPtrumpmap2016andCrime_noAorH <- as_Spatial(trumpmap2016andCrime_noAorH)
+
+class(SPtrumpmap2016andCrime_noAorH)
+
+coordsStates <- coordinates(SPtrumpmap2016andCrime_noAorH) 
+
+
+```
+
+Plot to check it 
+
+```{r}
+plot(coordsStates, 
+             main="Centroids of all U.S Mainland states",
+             xlab="Longitude",
+             ylab="Latitude"
+             )
+```
+
+Add the coordinates to the map 
+
+```{r}
+trumpmap2016andCrime_noAorH$coordinates <- coordsStates
+
+```
+
+Next you have to create a neighbours list which is then plotted with the map of the U.S. underneath
+
+```{r}
+
+States_nb <- poly2nb(trumpmap2016andCrime_noAorH, queen=T)
+
+plot(States_nb, coordinates(coordsStates), col="red")
+
+```
+
+Then create the spatial weights matrix
+
+```{r}
+States.lw <- nb2listw(States_nb, style="C")
+
+head(States.lw$neighbours)
+```
+
+
+An additional neighbours list is created here for later use in the 2016 hate crime statistics because there is missing data for Wyoming
+
+```{r}
+
+trumpmap2016andCrime_noAorH_noNA <-  trumpmap2016andCrime_noAorH[!is.na(trumpmap2016andCrime_noAorH$incident2016per100k), ]
+
+States_noNA_nb <- poly2nb(trumpmap2016andCrime_noAorH_noNA, queen=T)
+States_no_na.lw <- nb2listw(States_noNA_nb, style="C")
+
+
+```
 
 
 
